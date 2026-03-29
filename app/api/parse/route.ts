@@ -12,10 +12,8 @@ export async function POST(req: Request) {
     const ext = file.name.split(".").pop()?.toLowerCase();
 
     if (ext === "pdf") {
-      // Import the inner lib directly — pdf-parse's index.js reads a test file
-      // on load which throws in Next.js server environments.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse/lib/pdf-parse");
+      const pdfParse = require("pdf-parse");
       const data = await pdfParse(buffer);
       return Response.json({ text: data.text });
     }
@@ -28,7 +26,8 @@ export async function POST(req: Request) {
 
     return Response.json({ error: "Unsupported file type" }, { status: 400 });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
     console.error("Parse error:", err);
-    return Response.json({ error: "Failed to parse file" }, { status: 500 });
+    return Response.json({ error: message }, { status: 500 });
   }
 }
