@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -143,6 +144,19 @@ export default function Home() {
         setResult(accumulated);
       }
 
+      // Save to DB in background — don't block the UI
+      fetch("/api/evaluations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          specFilename: spec.name,
+          workFilename: work.name,
+          specText: spec.text,
+          workText: work.text,
+          aiOutput: accumulated,
+        }),
+      }).catch(console.error);
+
       setState("done");
     } catch (err) {
       setState("error");
@@ -195,6 +209,10 @@ export default function Home() {
           <p className="text-gray-500 text-sm ml-9">
             Upload a spec and a contributor's work product. Get a structured evaluation instantly.
           </p>
+          <div className="flex gap-4 ml-9 mt-2">
+            <Link href="/review" className="text-xs text-blue-500 hover:underline">Review queue</Link>
+            <Link href="/dashboard" className="text-xs text-blue-500 hover:underline">Dashboard</Link>
+          </div>
         </div>
 
         {/* Upload card */}
