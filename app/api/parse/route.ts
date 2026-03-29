@@ -12,8 +12,9 @@ export async function POST(req: Request) {
     const ext = file.name.split(".").pop()?.toLowerCase();
 
     if (ext === "pdf") {
+      // Use lib subpath to avoid pdf-parse index.js reading a test file on load
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse");
+      const pdfParse = require("pdf-parse/lib/pdf-parse");
       const data = await pdfParse(buffer);
       return Response.json({ text: data.text });
     }
