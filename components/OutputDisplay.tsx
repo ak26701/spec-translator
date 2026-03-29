@@ -3,19 +3,19 @@
 import { useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ContributorRole, ROLE_LABELS } from "@/lib/prompts";
 
 interface OutputDisplayProps {
-  results: Record<ContributorRole, string>;
-  activeRole: ContributorRole;
-  onRoleChange: (role: ContributorRole) => void;
+  results: Record<string, string>;  // key = "role:seniority"
+  labels: Record<string, string>;   // key = "role:seniority" → display label
+  activeKey: string;
+  onKeyChange: (key: string) => void;
 }
 
-export default function OutputDisplay({ results, activeRole, onRoleChange }: OutputDisplayProps) {
+export default function OutputDisplay({ results, labels, activeKey, onKeyChange }: OutputDisplayProps) {
   const printRef = useRef<HTMLDivElement>(null);
 
-  const roles = Object.keys(results) as ContributorRole[];
-  const content = results[activeRole];
+  const keys = Object.keys(results);
+  const content = results[activeKey] ?? "";
 
   const handleExportPDF = () => {
     const printContent = printRef.current;
@@ -28,18 +28,16 @@ export default function OutputDisplay({ results, activeRole, onRoleChange }: Out
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${ROLE_LABELS[activeRole]} Instructions</title>
+          <title>${labels[activeKey] ?? "Instructions"}</title>
           <meta charset="utf-8" />
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; color: #111; line-height: 1.6; }
             h1 { font-size: 22px; border-bottom: 2px solid #2563eb; padding-bottom: 8px; color: #1e40af; }
             h2 { font-size: 16px; margin-top: 24px; color: #1e3a5f; }
-            h3 { font-size: 14px; color: #374151; }
             ol, ul { padding-left: 20px; }
             li { margin-bottom: 6px; }
             p { margin: 8px 0; }
             code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-            pre { background: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; }
             @media print { body { padding: 20px; } }
           </style>
         </head>
@@ -48,38 +46,33 @@ export default function OutputDisplay({ results, activeRole, onRoleChange }: Out
     `);
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 300);
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 300);
   };
 
   const handleCopySlack = async () => {
-    // Slack-friendly format: strip markdown headers to bold, keep numbered lists
     const slackText = content
       .replace(/^# (.+)$/gm, "*$1*")
       .replace(/^## (.+)$/gm, "\n*$1*")
-      .replace(/^### (.+)$/gm, "*$1*")
-      .replace(/^\*\*(.+)\*\*$/gm, "*$1*");
+      .replace(/^### (.+)$/gm, "*$1*");
     await navigator.clipboard.writeText(slackText);
     alert("Copied to clipboard in Slack format.");
   };
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Role tabs */}
-      {roles.length > 1 && (
+      {/* Tabs */}
+      {keys.length > 1 && (
         <div className="flex gap-2 flex-wrap">
-          {roles.map((role) => (
+          {keys.map((key) => (
             <button
-              key={role}
-              onClick={() => onRoleChange(role)}
+              key={key}
+              onClick={() => onKeyChange(key)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-                ${activeRole === role
+                ${activeKey === key
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
             >
-              {ROLE_LABELS[role]}
+              {labels[key]}
             </button>
           ))}
         </div>
