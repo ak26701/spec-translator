@@ -12,9 +12,10 @@ export async function POST(req: Request) {
     const ext = file.name.split(".").pop()?.toLowerCase();
 
     if (ext === "pdf") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParseModule = await import("pdf-parse") as any;
-      const pdfParse = pdfParseModule.default ?? pdfParseModule;
+      // Import the inner lib directly — pdf-parse's index.js reads a test file
+      // on load which throws in Next.js server environments.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const pdfParse = require("pdf-parse/lib/pdf-parse");
       const data = await pdfParse(buffer);
       return Response.json({ text: data.text });
     }
