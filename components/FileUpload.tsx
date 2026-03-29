@@ -33,12 +33,12 @@ export default function FileUpload({ onFileContent, isLoading }: FileUploadProps
           const formData = new FormData();
           formData.append("file", file);
           const res = await fetch("/api/parse", { method: "POST", body: formData });
-          if (!res.ok) throw new Error("Parse failed");
           const data = await res.json();
+          if (!res.ok) throw new Error(data.error ?? `Server error ${res.status}`);
           onFileContent(data.text, file.name);
         }
-      } catch {
-        setError("Failed to read file. Try again.");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to read file. Try again.");
       }
     },
     [onFileContent]
